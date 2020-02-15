@@ -28,15 +28,18 @@ const typeDefs = gql`
 
   type Query {
     games: [Game]
+    game(id: ID): Game
   }
 `;
 
 const games = [
   {
+    id: 'assdqwdas',
     title: 'Super Mario World',
     releaseDate: '11-21-1990',
   },
   {
+    id: 'assdqwdfw',
     title: 'Super Metroid',
     releaseDate: '03-19-1994',
     genre: 'Action / Side Scrolling',
@@ -53,6 +56,12 @@ const resolvers = {
   Query: {
     games: () => {
       return games;
+    },
+    game: (obj, { id }, context, info) => {
+      const foundGame = games.find(game => {
+        return game.id === id;
+      });
+      return foundGame;
     },
   },
 };
