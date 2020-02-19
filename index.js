@@ -2,6 +2,7 @@ const { ApolloServer, gql } = require('apollo-server');
 const { GraphQLScalarType } = require('graphql');
 const { Kind } = require('graphql/language');
 
+// gql`` parses you string into an AST
 const typeDefs = gql`
   scalar Date
 
@@ -35,8 +36,22 @@ const typeDefs = gql`
     game(id: ID): Game
   }
 
+  input DevInput {
+    id: ID
+    name: String
+  }
+
+  input GameInput {
+    id: ID
+    title: String
+    releaseDate: Date
+    genre: String
+    status: Status
+    dev: [DevInput]
+  }
+
   type Mutation {
-    addGame(title: String, releaseDate: Date, id: ID): [Game]
+    addGame(game: GameInput): [Game]
   }
 `;
 
@@ -98,19 +113,18 @@ const resolvers = {
     },
   },
   Mutation: {
-    addGame: (obj, { id, title, releaseDate }, context) => {
-      // mutation / db stuff
-      const newGamesList = [
-        ...games,
-        // new game data
-        {
-          id,
-          title,
-          releaseDate,
-        },
-      ];
-      // return data as expected in schema
-      return newGamesList;
+    addGame: (obj, { game }, { userId }) => {
+      if (userId) {
+        // mutation / db stuff
+        const newGamesList = [
+          ...games,
+          // new game data
+          game,
+        ];
+        // return data as expected in schema
+        return newGamesList;
+      }
+      return games;
     },
   },
   Date: new GraphQLScalarType({
@@ -138,6 +152,14 @@ const server = new ApolloServer({
   resolvers,
   introspection: true,
   playground: true,
+  context: ({ req }) => {
+    const fakeUser = {
+      userId: 'helloImAUser',
+    };
+    return {
+      ...fakeUser,
+    };
+  },
 });
 
 server
