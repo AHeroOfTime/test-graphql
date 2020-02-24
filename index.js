@@ -1,6 +1,20 @@
 const { ApolloServer, gql } = require('apollo-server');
 const { GraphQLScalarType } = require('graphql');
 const { Kind } = require('graphql/language');
+const mongoose = require('mongoose');
+
+mongoose.connect({ useNewUrlParser: true });
+const db = mongoose.connection;
+
+var gameSchema = new mongoose.Schema({
+  title: String,
+  releaseDate: Date,
+  genre: String,
+  status: String,
+  devIds: [String],
+});
+
+const Game = mongoose.model('Game', gameSchema);
 
 // gql`` parses you string into an AST
 const typeDefs = gql`
@@ -162,10 +176,15 @@ const server = new ApolloServer({
   },
 });
 
-server
-  .listen({
-    port: process.env.PORT || 4000,
-  })
-  .then(({ url }) => {
-    console.log(`Server started at ${url}`);
-  });
+db.on('error', console.error.bind(console, 'connection error:'));
+db.once('open', function() {
+  console.log('database connected');
+
+  server
+    .listen({
+      port: process.env.PORT || 4000,
+    })
+    .then(({ url }) => {
+      console.log(`Server started at ${url}`);
+    });
+});
